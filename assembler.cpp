@@ -16,10 +16,14 @@ vector<string> asmCode;
 // Declaracao de metodos
 // ---------------------
 int readFile(char *fname);
-
 int binToDec(string bin);
-
 string decToBin(int dec);
+string getOpCode(string op);
+string getFuncCode(string op);
+string getRegCode(string reg);
+string extend(string s,char c);
+std::vector<std::string> split(std::string &s, std::string rgx_str);
+string Itype(string operation);
 // ---------------------
 
 int readFile(char *fname) {
@@ -90,8 +94,8 @@ string getRegCode(string reg) {
 }
 
 string extend(string s,char c){
-    while(s.length() < 16)
-        s.insert(0,1,c);
+    int aux = 16 - s.length();
+    s.insert(0,aux,c);
     return s;
 }
 
@@ -100,7 +104,7 @@ std::vector<std::string> split(std::string &s, std::string rgx_str) {
     std::regex rgx(rgx_str);
     std::sregex_token_iterator it(s.begin(), s.end(), rgx, -1);
     std::sregex_token_iterator end;
-    while (it != end) {
+    while (it != end) { 
         if((*it).compare(""))
             v.push_back(*it);
         it++;
@@ -121,7 +125,7 @@ int binToDec(string bin) {
 }
 
 string decToBin(int dec) {
-    bool baux(false);
+    bool baux = false;
     string aux;
     string res;
     int rem;
@@ -139,14 +143,15 @@ string decToBin(int dec) {
             else if(aux[i] == '1')
                 baux = true;
         }
-        cout << aux << endl;
         res = extend(string(aux.rbegin(), aux.rend()), '1');
-    }else res = extend(string(aux.rbegin(), aux.rend()), '0');
+    }else{
+        res = extend(string(aux.rbegin(), aux.rend()), '0');
+    }
     return res;
 }
 
 string Itype(string operation) {
-    vector<string> v = split(operation, "(\\s|,)");
+    vector<string> v = split(operation, "(\\s|,)+"); //     \\s e espaco em branco       | e um or (ou)       , e uma virgula
     string opcode = getOpCode(v[0]);
     string rs = getRegCode(v[2]);
     string rt = getRegCode(v[1]);
@@ -154,12 +159,26 @@ string Itype(string operation) {
     if(!isalpha(v[3][0])){
         imm = decToBin(atoi(v[3].c_str()));
     }
-    return string(opcode+rs+rt+imm);
+    return (opcode+rs+rt+imm);
 }
 
+string binToHex(string bin){
+    string resp;
+    for(int i = 0;i <= bin.length()-4;i+=4){
+        string aux(bin,i,4);
+        int vrau = binToDec(aux);
+        if(vrau > 9){
+            vrau += 0x37;
+        }else{
+            vrau += 0x30;
+        }
+        resp += vrau;
+    }
+    return resp;
+}
 
 int main(int argc, char **argv) {
-    string s("addiu $t0, $t0, 23");
-    cout << Itype(s) << endl;
+    string s = "110110110101";
+    cout << binToHex(s) << endl;
     return 0;
 }

@@ -1,1 +1,1 @@
-g++-6 assembler.cpp -o asm
+g++ -std=c++11 assembler.cpp -o asm
