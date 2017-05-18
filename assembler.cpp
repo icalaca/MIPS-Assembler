@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <vector>
 #include <regex>
+#define BASE 0x00400000
 
 using namespace std;
 
@@ -33,8 +34,10 @@ int readFile(char *fname) {
         cout << "Error!" << endl;
         return 1;
     }
-    while (getline(file, line))
+    while (getline(file, line)){
+      if(line != "")
         asmCode.push_back(line);
+    }
     return 0;
 }
 
@@ -93,8 +96,8 @@ string getRegCode(string reg) {
     if (reg == "$ra") return "11111";
 }
 
-string extend(string s,char c){
-    int aux = 16 - s.length();
+string extend(string s,char c,int ext){
+    int aux = ext - s.length();
     s.insert(0,aux,c);
     return s;
 }
@@ -124,7 +127,7 @@ int binToDec(string bin) {
     return result;
 }
 
-string decToBin(int dec) {
+string decToBin(int dec,int ext) {
     bool baux = false;
     string aux;
     string res;
@@ -143,34 +146,38 @@ string decToBin(int dec) {
             else if(aux[i] == '1')
                 baux = true;
         }
-        res = extend(string(aux.rbegin(), aux.rend()), '1');
+        res = extend(string(aux.rbegin(), aux.rend()), '1',ext);
     }else{
-        res = extend(string(aux.rbegin(), aux.rend()), '0');
+        cout << string(aux.rbegin(), aux.rend()) << endl;
+        res = extend(string(aux.rbegin(), aux.rend()), '0',ext);
     }
     return res;
 }
 
-int searchLine(string s){
-    for(int i = 0;i < asmCode.size();i++){
-        if(asmCode[i].find(s) != string::npos)
-            return i;
+int countOpLabel(string label){// conta operacoes ate uma label
+  int acm = 0;
+  cout << "op label:" << endl;
+  for(int i = 0;i < asmCode.size();i++){
+    if(asmCode[i].find(label+":") != string::npos)
+      return acm;
+    if(asmCode[i].find(":") == string::npos){
+      cout << asmCode[i] << endl;
+      acm++;
     }
-    return -1;
+  }
+  return -1;
 }
 
-string Itype(string operation) {//substituir operation por numero da linha em asmCode?
-    vector<string> v = split(operation, "(\\s|,)+"); //     \\s e espaco em branco       | e um or (ou)       , e uma virgula
-    string opcode = getOpCode(v[0]);
-    string rs = getRegCode(v[2]);
-    string rt = getRegCode(v[1]);
-    string imm;
-    if(!isalpha(v[3][0])){
-        imm = decToBin(atoi(v[3].c_str()));
-    }else{
-        string label = v[3];
-        int labelLine = searchLine(label);
+int countOpLine(int line){// conta operacoes ate uma linha
+  int acm = 0;
+  cout << "op line:" << endl;
+  for(int i = 0;i <= line;i++){
+    if(asmCode[i].find(":") == string::npos){
+      cout << asmCode[i] << endl;
+      acm++;
     }
-    return (opcode+rs+rt+imm);
+  }
+  return acm;
 }
 
 string binToHex(string bin){
@@ -188,8 +195,81 @@ string binToHex(string bin){
     return resp;
 }
 
+string Itype(string operation, int line) {
+    vector<string> v = split(operation, "(\\s|,)+"); //     \\s e espaco em branco       | e um or (ou)       , e uma virgula
+    string opcode = getOpCode(v[0]);
+    string rt = getRegCode(v[1]);
+    string rs;
+    string imm;
+      if((v[0] == "sw") || (v[0] == "lw")){
+        vector<string> aux = split(v[2],"(\\(|\\))+");
+        rs = getRegCode(aux[1]);
+        imm = decToBin(atoi(aux[0].c_str()),16);
+      }else if(v[0] == "lui"){
+        rs = decToBin(0,5);
+        imm = decToBin(atoi(v[2].c_str()),16);
+      }else if((v[0] == "bne")||(v[0] == "beq")){
+        rs = getRegCode(v[1]);
+        rt = getRegCode(v[2]);
+        string label = v[3];
+        imm = decToBin(countOpLabel(label) - countOpLine(line),16);
+      }else{
+        rs = getRegCode(v[2]);
+        imm = decToBin(atoi(v[3].c_str()),16);
+      }
+      return (opcode+rs+rt+imm);
+}
+
+string Jtype(string operation,int line){
+  vector<string> v = split(operation,"(\\s)+");
+  string opcode = getOpCode(v[0]);
+  string label = v[1];
+  int addr = BASE + 4*countOpLabel(label);
+  return (opcode+decToBin(addr,28)); //o endereco de j e shiftado << indo de 26 pra 28 bits
+}
+
+string Rtype(string operation,int line){
+  //VRAUUU michael jordan
+}
+/* para tipo J:
+if(v[0] == "j"){
+  int addr = BASE + 4*(countOpLabel(label));
+  imm = decToBin(addr);
+}
+*/
+/*
+0 - label:
+1 - i1
+2 - i2
+3 - i3
+4 - i4
+5 - op
+6 - pc
+7 - label2:
+8 - op2
+*/
+
 int main(int argc, char **argv) {
-    string s = "110110110101";
-    cout << binToHex(s) << endl;
+  asmCode.push_back("main:");
+  asmCode.push_back("op1");
+  asmCode.push_back("op2");
+  asmCode.push_back("j label2");
+  asmCode.push_back("op4");
+  asmCode.push_back("label1:");
+  asmCode.push_back("op5");
+  asmCode.push_back("op6");
+  asmCode.push_back("op7");
+  asmCode.push_back("op8");
+  asmCode.push_back("op9");
+  asmCode.push_back("op10");
+  asmCode.push_back("op11");  //10 -
+  asmCode.push_back("label2:");
+  asmCode.push_back("op12");//-9
+  asmCode.push_back("op13");
+  asmCode.push_back("op14");
+    //string s = "beq $t2,$t3,label2";
+    string s = "j label2";
+    //binToHex(Itype(s,3));
+    cout << binToHex(Jtype(s,14)) << endl;
     return 0;
 }
