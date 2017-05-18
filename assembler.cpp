@@ -104,7 +104,7 @@ std::vector<std::string> split(std::string &s, std::string rgx_str) {
     std::regex rgx(rgx_str);
     std::sregex_token_iterator it(s.begin(), s.end(), rgx, -1);
     std::sregex_token_iterator end;
-    while (it != end) { 
+    while (it != end) {
         if((*it).compare(""))
             v.push_back(*it);
         it++;
@@ -150,7 +150,15 @@ string decToBin(int dec) {
     return res;
 }
 
-string Itype(string operation) {
+int searchLine(string s){
+    for(int i = 0;i < asmCode.size();i++){
+        if(asmCode[i].find(s) != string::npos)
+            return i;
+    }
+    return -1;
+}
+
+string Itype(string operation) {//substituir operation por numero da linha em asmCode?
     vector<string> v = split(operation, "(\\s|,)+"); //     \\s e espaco em branco       | e um or (ou)       , e uma virgula
     string opcode = getOpCode(v[0]);
     string rs = getRegCode(v[2]);
@@ -158,6 +166,9 @@ string Itype(string operation) {
     string imm;
     if(!isalpha(v[3][0])){
         imm = decToBin(atoi(v[3].c_str()));
+    }else{
+        string label = v[3];
+        int labelLine = searchLine(label);
     }
     return (opcode+rs+rt+imm);
 }
