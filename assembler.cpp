@@ -96,6 +96,66 @@ string getRegCode(string reg) {
     if (reg == "$ra") return "11111";
 }
 
+string getOpCodeSullivan(string op) {
+    if (op == "001110") return "xori";
+    if (op == "001100") return "andi";
+    if (op == "001111") return "lui";
+    if (op == "000100") return "beq";
+    if (op == "000010") return "j";
+    if (op == "000101") return "bne";
+    if (op == "100011") return "lw";
+    if (op == "001001") return "addiu";
+    if (op == "001011") return "sltiu";
+    if (op == "101011") return "sw";
+    if (op == "000000") return "subu";
+    if (op == "000000") return "or";
+    if (op == "000000") return "slt";
+    if (op == "000000") return "addu";
+    if (op == "000000") return "sll";
+    if (op == "000000") return "sll";
+}
+
+string getFuncCodeSullivan(string op) {
+    if (op == "100011") return "subu";
+    if (op == "100101") return "or";
+    if (op == "101010") return "slt";
+    if (op == "100001") return "addu";
+    if (op == "000000") return "sll";
+    if (op == "000010") return "srl";
+}
+
+string getRegCodeSullivan(string reg) {
+    if (reg == "00000") return "$zero";
+    if (reg == "00010") return "$v0";
+    if (reg == "00011") return "$v1";
+    if (reg == "00100") return "$a0";
+    if (reg == "00101") return "$a1";
+    if (reg == "00110") return "$a2";
+    if (reg == "00111") return "$a3";
+    if (reg == "01000") return "$t0";
+    if (reg == "01001") return "$t1";
+    if (reg == "01010") return "$t2";
+    if (reg == "01011") return "$t3";
+    if (reg == "01100") return "$t4";
+    if (reg == "01101") return "$t5";
+    if (reg == "01110") return "$t6";
+    if (reg == "01111") return "$t7";
+    if (reg == "11000") return "$t8";
+    if (reg == "11001") return "$t9";
+    if (reg == "10000") return "$s0";
+    if (reg == "10001") return "$s1";
+    if (reg == "10010") return "$s2";
+    if (reg == "10011") return "$s3";
+    if (reg == "10100") return "$s4";
+    if (reg == "10101") return "$s5";
+    if (reg == "10110") return "$s6";
+    if (reg == "10111") return "$s7";
+    if (reg == "11100") return "$gp";
+    if (reg == "11101") return "$sp";
+    if (reg == "11110") return "$fp";
+    if (reg == "11111") return "$ra";
+}
+
 string extend(string s,char c,int ext){
     int aux = ext - s.length();
     s.insert(0,aux,c);
@@ -191,6 +251,23 @@ string binToHex(string bin){
     return resp;
 }
 
+string hexToBin(string hex){
+    string resp;
+    for(int i = 0; i < hex.length(); i++){
+        if(!isalpha(hex[i])){
+            resp += decToBin(hex[i]-0x30,4);
+        }else{
+            if(hex[i] == 'A') resp += decToBin(10,4);
+            if(hex[i] == 'B') resp += decToBin(11,4);
+            if(hex[i] == 'C') resp += decToBin(12,4);
+            if(hex[i] == 'D') resp += decToBin(13,4);
+            if(hex[i] == 'E') resp += decToBin(14,4);
+            if(hex[i] == 'F') resp += decToBin(15,4);
+        }
+    }
+    return resp;
+}
+
 string Itype(string operation, int line) {
     vector<string> v = split(operation, "(\\s|,)+"); //     \\s e espaco em branco       | e um or (ou)       , e uma virgula
     string opcode = getOpCode(v[0]);
@@ -253,6 +330,8 @@ string Rtype(string operation, int line){
     }
     return (opcode + rs + rt + rd + shift + func);
 }
+
+
 /* para tipo J:
 if(v[0] == "j"){
   int addr = BASE + 4*(countOpLabel(label));
@@ -292,6 +371,7 @@ int main(int argc, char **argv) {
     //string s = "beq $t2,$t3,label2";
     string s = "subu $t0, $t1, $t2";
     //binToHex(Itype(s,3));
-    cout << binToHex(Rtype(s,3)) << endl;
+    //cout << binToHex(Rtype(s,3)) << endl;
+    cout << hexToBin("012A4023") << endl;
     return 0;
 }
