@@ -156,12 +156,10 @@ string decToBin(int dec,int ext) {
 
 int countOpLabel(string label){// conta operacoes ate uma label
   int acm = 0;
-  cout << "op label:" << endl;
   for(int i = 0;i < asmCode.size();i++){
     if(asmCode[i].find(label+":") != string::npos)
       return acm;
     if(asmCode[i].find(":") == string::npos){
-      cout << asmCode[i] << endl;
       acm++;
     }
   }
@@ -170,10 +168,8 @@ int countOpLabel(string label){// conta operacoes ate uma label
 
 int countOpLine(int line){// conta operacoes ate uma linha
   int acm = 0;
-  cout << "op line:" << endl;
   for(int i = 0;i <= line;i++){
     if(asmCode[i].find(":") == string::npos){
-      cout << asmCode[i] << endl;
       acm++;
     }
   }
@@ -228,8 +224,34 @@ string Jtype(string operation,int line){
   return (opcode+decToBin(addr,28)); //o endereco de j e shiftado << indo de 26 pra 28 bits
 }
 
-string Rtype(string operation,int line){
-  //VRAUUU michael jordan
+string Rtype(string operation, int line){
+    vector<string> v = split(operation,"(\\s|,)+");
+    string opcode = getOpCode(v[0]);
+    string rs;
+    string rd;
+    string rt;
+    string shift;
+    string func;
+    if((v[0] == "sll") || (v[0] == "srl")){
+        rs = decToBin(0,5);
+        rt = getRegCode(v[2]);
+        rd = getRegCode(v[1]);
+        shift = decToBin(atoi(v[3].c_str()),5);
+        func = getFuncCode(v[0]);
+    }else if(getOpCode(v[0]) == "000000"){
+        rs = getRegCode(v[2]);
+        rt = getRegCode(v[3]);
+        rd = getRegCode(v[1]);
+        shift = decToBin(0,5);
+        func = getFuncCode(v[0]);
+    }else{
+        rs = getRegCode(v[2]);
+        rt = getRegCode(v[3]);
+        rd = getRegCode(v[1]);
+        shift = decToBin(0,5);
+        func = decToBin(0,6);
+    }
+    return (opcode + rs + rt + rd + shift + func);
 }
 /* para tipo J:
 if(v[0] == "j"){
@@ -253,7 +275,7 @@ int main(int argc, char **argv) {
   asmCode.push_back("main:");
   asmCode.push_back("op1");
   asmCode.push_back("op2");
-  asmCode.push_back("j label2");
+  asmCode.push_back("subu $t0, $t1, $t2");
   asmCode.push_back("op4");
   asmCode.push_back("label1:");
   asmCode.push_back("op5");
@@ -268,8 +290,8 @@ int main(int argc, char **argv) {
   asmCode.push_back("op13");
   asmCode.push_back("op14");
     //string s = "beq $t2,$t3,label2";
-    string s = "j label2";
+    string s = "subu $t0, $t1, $t2";
     //binToHex(Itype(s,3));
-    cout << binToHex(Jtype(s,14)) << endl;
+    cout << binToHex(Rtype(s,3)) << endl;
     return 0;
 }
