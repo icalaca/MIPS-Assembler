@@ -23,6 +23,7 @@ string getOpCode(string op);
 string getFuncCode(string op);
 string getRegCode(string reg);
 string extend(string s,char c);
+string binToHex(string bin);
 std::vector<std::string> split(std::string &s, std::string rgx_str);
 string Itype(string operation);
 // ---------------------
@@ -112,7 +113,7 @@ string getOpCodeSullivan(string op) {
     if (op == "000000") return "slt";
     if (op == "000000") return "addu";
     if (op == "000000") return "sll";
-    if (op == "000000") return "sll";
+    if (op == "000000") return "srl";
 }
 
 string getFuncCodeSullivan(string op) {
@@ -156,6 +157,64 @@ string getRegCodeSullivan(string reg) {
     if (reg == "11111") return "$ra";
 }
 
+int funcType(string op){
+    if (op == "000000") return 1; // 1 = R
+    if (op == "001110") return 2; // 2 = I
+    if (op == "001100") return 2; // 2 = I
+    if (op == "001111") return 2; // 2 = I
+    if (op == "000100") return 2; // 2 = I
+    if (op == "000010") return 3; // 3 = J
+    if (op == "000101") return 2; // 2 = I
+    if (op == "100011") return 2; // 2 = I
+    if (op == "001001") return 2; // 2 = I
+    if (op == "001011") return 2; // 2 = I
+    if (op == "101011") return 2; // 2 = I
+}
+
+string sullivanI(string bin, int line){
+    string op = getOpCodeSullivan(bin.substr(0,6));
+    string rs = getRegCodeSullivan(bin.substr(6,5));
+    string rt = getRegCodeSullivan(bin.substr(11,5));
+    string imm = std::to_string(binToDec(bin.substr(16,16)));
+
+      if((op == "sw") || (op == "lw")){
+          return (op + " " + rt + ", " + imm + "(" + rs + ")");
+      }
+      if(op == "lui"){
+          return (op + " " + rt + ", " + imm);
+      }
+      if((op == "bne")||(op == "beq")){
+          string label = "LABEL_0x"+binToHex(imm);
+          int v = binToDec(imm);
+          int l = line + v;
+          asmCode[l].insert(0,label + ":");
+          return (op + " " + rt + ", " + rs + ", "+label);
+      }
+    return (op + " " + rt + ", " + rs + ", " + imm);
+}
+
+string sullivanJ(string bin){
+
+}
+
+string sullivanR(string bin){
+
+}
+
+void sullivan(string bin, int line){
+    string aux = bin.substr(0,6);
+    string resp;
+    if(funcType(aux) == 1){
+        resp = sullivanR(bin);
+    }
+    if(funcType(aux) == 2){
+        resp = sullivanI(bin, line);
+    }
+    if(funcType(aux) == 3){
+        resp = sullivanJ(bin);
+    }
+}
+
 string extend(string s,char c,int ext){
     int aux = ext - s.length();
     s.insert(0,aux,c);
@@ -178,13 +237,29 @@ std::vector<std::string> split(std::string &s, std::string rgx_str) {
 
 
 int binToDec(string bin) {
+    bool baux = false;
     int result = 0;
-    for (int i = 0; i < bin.size(); i++) {
-        if (bin[i] == 0x31) {
-            result += pow(2, bin.size() - i - 1);
+    if(bin[0] == 0){
+        for (int i = 0; i < bin.size(); i++) {
+            if (bin[i] == 0x31) {
+                result += pow(2, bin.size() - i - 1);
+            }
         }
+        return result;
+    }else{
+        for(int i = bin.size()-1;i >= 0;i--){
+            if(baux == true)
+                bin[i] = ((bin[i] == '0') ? '1' : '0');
+            else if(bin[i] == '1')
+                baux = true;
+        }
+        for (int i = 0; i < bin.size(); i++) {
+            if (bin[i] == 0x31) {
+                result += pow(2, bin.size() - i - 1);
+            }
+        }
+        return result*-1;
     }
-    return result;
 }
 
 string decToBin(int dec,int ext) {
@@ -334,7 +409,7 @@ string Rtype(string operation, int line){
 
 /* para tipo J:
 if(v[0] == "j"){
-  int addr = BASE + 4*(countOpLabel(label));
+  int addr = BASE + 4*(countOpLstd::to_string(binToDec(bin.substr(16,16)))abel(label));
   imm = decToBin(addr);
 }
 */
@@ -372,6 +447,7 @@ int main(int argc, char **argv) {
     string s = "subu $t0, $t1, $t2";
     //binToHex(Itype(s,3));
     //cout << binToHex(Rtype(s,3)) << endl;
-    cout << hexToBin("012A4023") << endl;
+    //cout << hexToBin("012A4023") << endl;
+    cout << binToDec("100000100011") << endl;
     return 0;
 }
