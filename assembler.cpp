@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <utility>
 #include <string.h>
 #include <math.h>
 #include <stdlib.h>
@@ -17,6 +18,8 @@ vector<string> asmCode;
 // Declaracao de metodos
 // ---------------------
 int readFile(char *fname);
+int labelCount = 0;
+vector<pair<int, string>> labels;
 int binToDec(string bin);
 string decToBin(int dec);
 string getOpCode(string op);
@@ -40,6 +43,18 @@ int readFile(char *fname) {
         asmCode.push_back(line);
     }
     return 0;
+}
+
+void putLabels(){
+  if(!labels.empty()){
+    for(int i = 0;i < labels.size();i++)
+      asmCode[labels[i].first].insert(0,labels[i].second);
+  }
+}
+
+void addLabel(int line, string label){
+  labels.push_back(make_pair(line,label+":"));
+  labelCount++;
 }
 
 string getOpCode(string op) {
@@ -108,12 +123,7 @@ string getOpCodeSullivan(string op) {
     if (op == "001001") return "addiu";
     if (op == "001011") return "sltiu";
     if (op == "101011") return "sw";
-    if (op == "000000") return "subu";
-    if (op == "000000") return "or";
-    if (op == "000000") return "slt";
-    if (op == "000000") return "addu";
-    if (op == "000000") return "sll";
-    if (op == "000000") return "srl";
+    if (op == "000000") return "";
 }
 
 string getFuncCodeSullivan(string op) {
@@ -171,12 +181,13 @@ int funcType(string op){
     if (op == "101011") return 2; // 2 = I
 }
 
+
+
 string sullivanI(string bin, int line){
     string op = getOpCodeSullivan(bin.substr(0,6));
     string rs = getRegCodeSullivan(bin.substr(6,5));
     string rt = getRegCodeSullivan(bin.substr(11,5));
     string imm = std::to_string(binToDec(bin.substr(16,16)));
-
       if((op == "sw") || (op == "lw")){
           return (op + " " + rt + ", " + imm + "(" + rs + ")");
       }
@@ -184,21 +195,38 @@ string sullivanI(string bin, int line){
           return (op + " " + rt + ", " + imm);
       }
       if((op == "bne")||(op == "beq")){
-          string label = "LABEL_0x"+binToHex(imm);
-          int v = binToDec(imm);
-          int l = line + v;
-          asmCode[l].insert(0,label + ":");
+          string label = "LABEL_"+labelCount;
+          int l = line + binToDec(imm);
+          addLabel(l,label);
           return (op + " " + rt + ", " + rs + ", "+label);
       }
     return (op + " " + rt + ", " + rs + ", " + imm);
 }
 
 string sullivanJ(string bin){
-
+  string op = getOpCodeSullivan(bin.substr(0,6));
+  string label = "LABEL_"+labelCount;
+  int addr = binToDec(bin.substr(6,26));
+  int line = (addr-BASE)/4;
+  addLabel(line,label);
+  return (op+" "+label);
 }
 
 string sullivanR(string bin){
-
+  string op = getOpCodeSullivan(bin.substr(0,6));
+  string rs,rt,rd,shift,func;
+  rs = getRegCodeSullivan(bin.substr(6,5));
+  rt = getRegCodeSullivan(bin.substr(11,5));
+  rd = getRegCodeSullivan(bin.substr(16,5));
+  if(op.empty()){
+    func = getFuncCodeSullivan(bin.substr(26,6));
+    if((func == "sll") || (func == "srl")){   //opcode == 000000
+      shift = to_string(binToDec(bin.substr(21,5)));
+      return (func+" "+rd+", "+rt+", "+shift);
+    }
+    return (func+" "+rd+", "+rs+", "+", "+rt);
+  }
+  return (op+" "+rd+", "+rs+", "+", "+rt);
 }
 
 void sullivan(string bin, int line){
@@ -221,11 +249,11 @@ string extend(string s,char c,int ext){
     return s;
 }
 
-std::vector<std::string> split(std::string &s, std::string rgx_str) {
-    std::vector<std::string> v;
-    std::regex rgx(rgx_str);
-    std::sregex_token_iterator it(s.begin(), s.end(), rgx, -1);
-    std::sregex_token_iterator end;
+vector<string> split(string &s, string rgx_str) {
+    vector<string> v;
+    regex rgx(rgx_str);
+    sregex_token_iterator end;
+    sregex_token_iterator it(s.begin(), s.end(), rgx, -1);
     while (it != end) {
         if((*it).compare(""))
             v.push_back(*it);
@@ -234,32 +262,22 @@ std::vector<std::string> split(std::string &s, std::string rgx_str) {
     return v;
 }
 
-
-
 int binToDec(string bin) {
     bool baux = false;
     int result = 0;
-    if(bin[0] == 0){
-        for (int i = 0; i < bin.size(); i++) {
-            if (bin[i] == 0x31) {
-                result += pow(2, bin.size() - i - 1);
-            }
-        }
-        return result;
-    }else{
-        for(int i = bin.size()-1;i >= 0;i--){
-            if(baux == true)
-                bin[i] = ((bin[i] == '0') ? '1' : '0');
-            else if(bin[i] == '1')
-                baux = true;
-        }
-        for (int i = 0; i < bin.size(); i++) {
-            if (bin[i] == 0x31) {
-                result += pow(2, bin.size() - i - 1);
-            }
-        }
-        return result*-1;
+    if(bin[0] == 1){
+      for(int i = bin.size()-1;i >= 0;i--){
+          if(baux == true)
+              bin[i] = ((bin[i] == '0') ? '1' : '0');
+          else if(bin[i] == '1')
+              baux = true;
+      }
     }
+    for (int i = 0; i < bin.size(); i++) {
+      if (bin[i] == 0x31)
+        result += pow(2, bin.size() - i - 1);
+    }
+    return (baux) ? result*-1 : result;
 }
 
 string decToBin(int dec,int ext) {
@@ -283,7 +301,6 @@ string decToBin(int dec,int ext) {
         }
         res = extend(string(aux.rbegin(), aux.rend()), '1',ext);
     }else{
-        cout << string(aux.rbegin(), aux.rend()) << endl;
         res = extend(string(aux.rbegin(), aux.rend()), '0',ext);
     }
     return res;
@@ -332,12 +349,7 @@ string hexToBin(string hex){
         if(!isalpha(hex[i])){
             resp += decToBin(hex[i]-0x30,4);
         }else{
-            if(hex[i] == 'A') resp += decToBin(10,4);
-            if(hex[i] == 'B') resp += decToBin(11,4);
-            if(hex[i] == 'C') resp += decToBin(12,4);
-            if(hex[i] == 'D') resp += decToBin(13,4);
-            if(hex[i] == 'E') resp += decToBin(14,4);
-            if(hex[i] == 'F') resp += decToBin(15,4);
+            resp += decToBin(hex[i] - 0x37,4);
         }
     }
     return resp;
@@ -390,40 +402,21 @@ string Rtype(string operation, int line){
         rd = getRegCode(v[1]);
         shift = decToBin(atoi(v[3].c_str()),5);
         func = getFuncCode(v[0]);
-    }else if(getOpCode(v[0]) == "000000"){
-        rs = getRegCode(v[2]);
-        rt = getRegCode(v[3]);
-        rd = getRegCode(v[1]);
-        shift = decToBin(0,5);
-        func = getFuncCode(v[0]);
     }else{
-        rs = getRegCode(v[2]);
-        rt = getRegCode(v[3]);
-        rd = getRegCode(v[1]);
-        shift = decToBin(0,5);
+      rs = getRegCode(v[2]);
+      rt = getRegCode(v[3]);
+      rd = getRegCode(v[1]);
+      shift = decToBin(0,5);
+      if(getOpCode(v[0]) == "000000")
+        func = getFuncCode(v[0]);
+      else
         func = decToBin(0,6);
     }
     return (opcode + rs + rt + rd + shift + func);
 }
 
 
-/* para tipo J:
-if(v[0] == "j"){
-  int addr = BASE + 4*(countOpLstd::to_string(binToDec(bin.substr(16,16)))abel(label));
-  imm = decToBin(addr);
-}
-*/
-/*
-0 - label:
-1 - i1
-2 - i2
-3 - i3
-4 - i4
-5 - op
-6 - pc
-7 - label2:
-8 - op2
-*/
+
 
 int main(int argc, char **argv) {
   asmCode.push_back("main:");
@@ -444,10 +437,11 @@ int main(int argc, char **argv) {
   asmCode.push_back("op13");
   asmCode.push_back("op14");
     //string s = "beq $t2,$t3,label2";
-    string s = "subu $t0, $t1, $t2";
+    string s = "sll $t0, $t1, 4";
     //binToHex(Itype(s,3));
+    //Rtype(s,3);
     //cout << binToHex(Rtype(s,3)) << endl;
-    //cout << hexToBin("012A4023") << endl;
-    cout << binToDec("100000100011") << endl;
+    cout << sullivanR(hexToBin("00094102")) << endl;
+    //cout << binToDec("100000100011") << endl;
     return 0;
 }
