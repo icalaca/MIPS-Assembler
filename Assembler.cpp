@@ -1,3 +1,7 @@
+/*
+ * Autores: Annderson Packeiser Oreto e Ian Oliveira Calaça da Costa
+ */
+
 #include <algorithm>
 #include <regex>
 #include <iostream>
@@ -8,8 +12,13 @@
 
 using namespace std;
 
+// numero da linha onde a label da diretiva globl esta localizada.
 int Assembler::mainLine = 0;
 
+/*
+ * Metodo que monta o codigo em assembly de uma instrucao do tipo I,
+ * recebida como codigo binario por parametro.
+ */
 string Assembler::iType(string operation, int line) {
     vector<string> v = HelpFuncts::split(operation, "(\\s|,)+"); //     \\s e espaco em branco       | e um or (ou)       , e uma virgula
     string opcode = AsmFuncts::getOpCode(v[0]);
@@ -35,6 +44,10 @@ string Assembler::iType(string operation, int line) {
     return (opcode+rs+rt+imm);
 }
 
+/*
+ * Metodo que monta o codigo em assembly de uma instrucao do tipo J,
+ * recebida como codigo binario por parametro.
+ */
 string Assembler::jType(string operation,int line){
     vector<string> v = HelpFuncts::split(operation,"(\\s)+");
     string opcode = AsmFuncts::getOpCode(v[0]);
@@ -43,6 +56,10 @@ string Assembler::jType(string operation,int line){
     return (opcode+Conversion::decToBin(addr,28));
 }
 
+/*
+ * Metodo que monta o codigo em assembly de uma instrucao do tipo R,
+ * recebida como codigo binario por parametro.
+ */
 string Assembler::rType(string operation, int line){
     vector<string> v = HelpFuncts::split(operation,"(\\s|,)+");
     string opcode = AsmFuncts::getOpCode(v[0]);
@@ -63,10 +80,13 @@ string Assembler::rType(string operation, int line){
     return (opcode + rs + rt + rd + shift + func);
 }
 
-
+/*
+ * Metodo que recebe uma instrucao e filtra nele
+ * qual o tipo da instrucao a ser tratada, enviando a mesma ao metodo adequado.
+ */
 string Assembler::procInst(string inst, int line){
     string resp = "";
-    vector<string> minst = HelpFuncts::split(inst,"(\\s)+");
+    vector<string> minst = HelpFuncts::split(inst,"(\\s)+"); // quebra por espaco apenas a primeira instrucao para teste.
     if(AsmFuncts::getType(minst[0]) == TYPE_I){
         resp = iType(inst, line);
     }
@@ -79,6 +99,10 @@ string Assembler::procInst(string inst, int line){
     return Conversion::binToHex(resp);
 }
 
+/*
+ * Metodo que processa uma linha do arquivo de entrada para montagem e
+ * adiciona a instrucao montada ao arquivo de saida.
+ */
 void Assembler::procAsmLine(string line, int n){
     vector<string> mline = HelpFuncts::split(line,"(\\s)+");
     if((mline[0] == ".text") || (mline[0].find(':') != string::npos))
@@ -90,6 +114,9 @@ void Assembler::procAsmLine(string line, int n){
     AsmFuncts::outCode.push_back("0x"+procInst(line, n));
 }
 
+/*
+ * Metodo que processa em um laco todas as linhas do arquivo de entrada para montagem.
+ */
 void Assembler::buildObj(void){
     for(int i = 0;i < AsmFuncts::inpCode.size();i++) {
         Assembler::procAsmLine(AsmFuncts::inpCode[i], i);

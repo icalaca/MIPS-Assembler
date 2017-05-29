@@ -1,6 +1,6 @@
-//
-// Created by dw on 28/05/17.
-//
+/*
+ * Autores: Annderson Packeiser Oreto e Ian Oliveira Calaça da Costa
+ */
 
 #include "HelpFuncts.h"
 #include "AsmFuncts.h"
@@ -8,6 +8,9 @@
 
 using namespace std;
 
+/*
+ * Metodo que conta a quantidade de operacoes do inicio ate uma label recebida por parametro.
+ */
 int HelpFuncts::countOpLabel(string label){
     int acm = 0;
     for(int i = 0;i < AsmFuncts::inpCode.size();i++){
@@ -20,6 +23,10 @@ int HelpFuncts::countOpLabel(string label){
     return -1;
 }
 
+/*
+ * Metodo que conta a quantidade de operacoes do inicio ate uma linha
+ * recebida por parametro para efetuar calculos do jump e adicoes de branch.
+ */
 int HelpFuncts::countOpLine(int line){
     int acm = 0;
     for(int i = 0;i <= line;i++){
@@ -30,6 +37,10 @@ int HelpFuncts::countOpLine(int line){
     return acm;
 }
 
+/*
+ * Metodo que cria um vetor com substrings da string de entrada,
+ * separando a mesma pela expressao regular recebida, tambem por parametro.
+ */
 vector<string> HelpFuncts::split(string &s, string rgx_str) {
     vector<string> v;
     regex rgx(rgx_str);

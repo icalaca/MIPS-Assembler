@@ -1,3 +1,7 @@
+/*
+ * Autores: Annderson Packeiser Oreto e Ian Oliveira Calaça da Costa
+ */
+
 #include "Disassembler.h"
 #include "Assembler.h"
 #include <iostream>
@@ -5,9 +9,15 @@
 
 using namespace std;
 
+// variavel auxiliar para gerar o nome das labels.
 int Disassembler::labelCount = 0;
+
+// vetor contendo o nome de todas as labels computadas ate entao e sua respectiva linha.
 vector<pair<int, string>> Disassembler::labels;
 
+/*
+ * Metodo que gera instrucoes do tipo I de acordo com o codigo binario convertido do hexadecimal.
+ */
 string Disassembler::iType(string bin, int line){
     string op = AsmFuncts::getOpCode(bin.substr(0,6));
     string rs = AsmFuncts::getRegCode(bin.substr(6,5));
@@ -28,6 +38,9 @@ string Disassembler::iType(string bin, int line){
     return (op + " " + rt + ", " + rs + ", " + imm);
 }
 
+/*
+ * Metodo que gera instrucoes do tipo J de acordo com o codigo binario convertido do hexadecimal.
+ */
 string Disassembler::jType(string bin){
     string op = AsmFuncts::getOpCode(bin.substr(0,6));
     string label = "LABEL_"+to_string(labelCount);
@@ -38,6 +51,9 @@ string Disassembler::jType(string bin){
     return (op+" "+label);
 }
 
+/*
+ * Metodo que gera instrucoes do tipo R de acordo com o codigo binario convertido do hexadecimal.
+ */
 string Disassembler::rType(string bin){
     string op = AsmFuncts::getOpCode(bin.substr(0,6));
     string rs,rt,rd,shift,func;
@@ -52,6 +68,10 @@ string Disassembler::rType(string bin){
     return (func+" "+rd+", "+rs+", "+rt);
 }
 
+/*
+ * Metodo que recebe uma instrucao em hexadecimal e filtra nela
+ * qual o tipo da instrucao a ser tratada, enviando a mesma ao metodo adequado.
+ */
 string Disassembler::procObj(string hex, int line){
     string bin = Conversion::hexToBin(hex);
     string aux = bin.substr(0,6);
@@ -71,6 +91,10 @@ string Disassembler::procObj(string hex, int line){
     return "";
 }
 
+/*
+ * Metodo que processa uma linha do arquivo de entrada para desmontagem e
+ * adiciona a instrucao desmontada ao arquivo de saida.
+ */
 void Disassembler::procObjLine(string line, int n){
     vector<string> mline = HelpFuncts::split(line,"(x)");
     if(n == -1){//indica ultima linha
@@ -81,6 +105,9 @@ void Disassembler::procObjLine(string line, int n){
     AsmFuncts::outCode.push_back("\t" + procObj(mline[1], n));
 }
 
+/*
+ * Quando o codigo em assembly estiver pronto, o metodo adiciona as labels a sua respectiva linha.
+ */
 void Disassembler::putLabels(){
     if(!labels.empty()){
         for(int i = 0;i < labels.size();i++)
@@ -88,21 +115,26 @@ void Disassembler::putLabels(){
     }
 }
 
-
+/*
+ * Metodo que adiciona uma label e sua respectiva linha ao vetor de pares labels.
+ */
 void Disassembler::addLabel(int line, string label){
     if(label == "main"){
         for(int i = 0;i < labels.size();i++)
-            if(labels[i].first == line+2){
+            if(labels[i].first == line+2){ //+2 para contar com a linha do .text e .globl
                 string mlabel = labels[i].second;
                 AsmFuncts::outCode[1].insert(AsmFuncts::outCode[1].length(),mlabel);
                 return;
             }
-        AsmFuncts::outCode[1].insert(AsmFuncts::outCode[1].length(),label);
+        AsmFuncts::outCode[1].insert(AsmFuncts::outCode[1].length(),label); //Adicionar "main" a diretiva .globl
     }
     labels.push_back(mp(line+2,label));//+2 => .text e .globl
     labelCount++;
 }
 
+/*
+ * Metodo que processa em um laco todas as linhas do arquivo de entrada para desmontagem.
+ */
 void Disassembler::buildCode(void){
     AsmFuncts::outCode.push_back(".text");
     AsmFuncts::outCode.push_back(".globl ");
@@ -112,6 +144,6 @@ void Disassembler::buildCode(void){
         else
             Disassembler::procObjLine(AsmFuncts::inpCode[i], i);
     }
-    Disassembler::putLabels();
+    Disassembler::putLabels(); // Apos montar o codigo em assembly, as labels sao colocadas.
 
 }

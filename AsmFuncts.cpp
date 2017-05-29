@@ -1,8 +1,16 @@
+/*
+ * Autores: Annderson Packeiser Oreto e Ian Oliveira Calaça da Costa
+ */
+
 #include "AsmFuncts.h"
 
 using namespace std;
+// Vetor de string com as instrucoes de entrada e saida.
 vector<string> AsmFuncts::inpCode, AsmFuncts::outCode;
 
+/*
+ * O metodo captura o tipo de opracao, tanto para montagem ou desmontagem de codigo.
+ */
 string AsmFuncts::getOpCode(string op) {
     for (int i = 0; i < Codes::typeIOp.size(); i++) {
         if(op == Codes::typeIOp[i].first)
@@ -19,6 +27,9 @@ string AsmFuncts::getOpCode(string op) {
     return "000000";
 }
 
+/*
+ * Para tipo R, captura o codigo da funcao do tipo, tanto para montagem como para desmontagem.
+ */
 string AsmFuncts::getFuncCode(string op) {
     for (int i = 0; i < Codes::typeROp.size(); i++) {
         if(op == Codes::typeROp[i].second)
@@ -29,6 +40,9 @@ string AsmFuncts::getFuncCode(string op) {
     return "000000";
 }
 
+/*
+ * O metodo captura o codigo dos registradores definidos na classe Codes, tanto para montagem como para desmontagem.
+ */
 string AsmFuncts::getRegCode(string reg) {
     for(int i = 0;i < Codes::Regs.size();i++){
         if(reg == Codes::Regs[i].first)
@@ -39,6 +53,9 @@ string AsmFuncts::getRegCode(string reg) {
     return "";
 }
 
+/*
+ * O metodo retorna o numero do tipo da instrucao, tanto para montagem como para desmontagem.
+ */
 int AsmFuncts::getType(string op){
     if(op == Conversion::decToBin(0,6))
         return TYPE_R;

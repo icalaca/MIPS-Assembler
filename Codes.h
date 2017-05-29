@@ -1,6 +1,4 @@
-//
-// Created by dw on 28/05/17.
-//
+
 #include <utility>
 #include <vector>
 #include <string>

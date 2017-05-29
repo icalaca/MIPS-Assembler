@@ -1,3 +1,7 @@
+/*
+ * Autores: Annderson Packeiser Oreto e Ian Oliveira Calaça da Costa
+ */
+
 #include <iostream>
 #include <fstream>
 #include <string.h>
@@ -20,16 +24,21 @@ void printAscii(void){
     cout << " | |__| | | | (_| |_   / ____ \\| | | (_| |_ " << endl;
     cout << "  \\____/|_|  \\__, (_) /_/    \\_\\_|  \\__, (_)" << endl;
     cout << "              __/ | Ian O.C.C          | |  " << endl;
-    cout << "             |___/    Andersson O.     |_|  " << endl;
+    cout << "             |___/    Annderson O.     |_|  " << endl;
     cout << endl;
 }
 
+/*
+ * O metodo imprime na tela a instrucao para uso do programa.
+ */
 void printHelp(char *exName){
     cout << "Assembler:\n" << exName << " --asm arquivo\n";
     cout << "Disassembler:\n" << exName << " --disasm arquivo\n";
-
 }
 
+/*
+ * O metodo le o arquivo para assemblar ou desassemblar e o carrega em um vetor de string.
+ */
 int readFile(char *fname) {
     ifstream ifile;
     string line;
@@ -44,6 +53,9 @@ int readFile(char *fname) {
     return 0;
 }
 
+/*
+ * Escreve em um arquivo de saida as instrucoes convertidas que estao contidas no vetor de string outCode.
+ */
 int writeFile(char *fname){
     ofstream ofile;
     ofile.open(fname);
@@ -57,6 +69,9 @@ int writeFile(char *fname){
     return 0;
 }
 
+/*
+ * Metodo principal que recebe os parametros enviado por linha de comando para a montagem ou desmontagem do codigo.
+ */
 int main(int argc, char **argv) {
     printAscii();
     if(argc != 3) {
