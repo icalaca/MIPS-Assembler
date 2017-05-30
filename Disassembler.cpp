@@ -140,6 +140,9 @@ void Disassembler::addLabel(int line, string label){
     labelCount++;
 }
 
+/*
+ * O metodo verifica se a label ja esta associada a uma linha.
+ */
 bool Disassembler::labelExists(int line){
   for(int i = 0;i < labels.size();i++)
     if(labels[i].first == line+2)// .globl e .text
@@ -147,6 +150,9 @@ bool Disassembler::labelExists(int line){
   return false;
 }
 
+/*
+ * O metodo pega o numero da linha associada a label.
+ */
 string Disassembler::getLabel(int line){
   for(int i = 0;i < labels.size();i++)
     if(labels[i].first == line+2) {// .globl e .text
