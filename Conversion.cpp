@@ -24,12 +24,14 @@ int Conversion::binToDec(string inp_bin) {
     bool baux = false;
     int result = 0;
     string bin = inp_bin;
-    if(bin[0] == '1'){ // se entrar nesta condicional, sera desfeito o complemento de dois.
-        for(int i = bin.size()-1;i >= 0;i--){
-            if(baux == true)
-                bin[i] = ((bin[i] == '0') ? '1' : '0');
-            else if(bin[i] == '1') // percorre a string da direita pra esquerda e
-                baux = true;       // quando encontrar o primeiro 1, repete ele e inverte o restante.
+    if(bin.length() >= 16){
+        if(bin[0] == '1'){ // se entrar nesta condicional, sera desfeito o complemento de dois.
+            for(int i = bin.size()-1;i >= 0;i--){
+                if(baux == true)
+                    bin[i] = ((bin[i] == '0') ? '1' : '0');
+                else if(bin[i] == '1') // percorre a string da direita pra esquerda e
+                    baux = true;       // quando encontrar o primeiro 1, repete ele e inverte o restante.
+            }
         }
     }
     for (int i = 0; i < bin.size(); i++) {
