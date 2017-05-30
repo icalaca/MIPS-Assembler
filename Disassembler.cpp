@@ -32,8 +32,12 @@ string Disassembler::iType(string bin, int line){
     if((op == "bne")||(op == "beq")){
         string label = "LABEL_"+to_string(labelCount);
         int l = line + stoi(imm) + 1;
-        addLabel(l,label);
-        return (op + " " + rs + ", " + rt + ", "+label);
+        if(!labelExists(l)){
+          addLabel(l,label);
+          return (op + " " + rs + ", " + rt + ", "+label);
+        }
+        else
+          return (op + " " + rs + ", " + rt + ", "+getLabel(l));
     }
     return (op + " " + rt + ", " + rs + ", " + imm);
 }
@@ -47,8 +51,12 @@ string Disassembler::jType(string bin){
     int addr = Conversion::binToDec(bin.substr(6,26));
     addr <<= 2;
     int line = (addr-BASE)/4;
-    addLabel(line,label);
-    return (op+" "+label);
+    if(!labelExists(line)){
+      addLabel(line,label);
+      return (op+" "+label);
+    }
+    else
+      return (op+" "+getLabel(line));
 }
 
 /*
@@ -132,6 +140,20 @@ void Disassembler::addLabel(int line, string label){
     labelCount++;
 }
 
+bool Disassembler::labelExists(int line){
+  for(int i = 0;i < labels.size();i++)
+    if(labels[i].first == line+2)// .globl e .text
+      return true;
+  return false;
+}
+
+string Disassembler::getLabel(int line){
+  for(int i = 0;i < labels.size();i++)
+    if(labels[i].first == line+2) {// .globl e .text
+      return labels[i].second;
+    }
+  return "";
+}
 /*
  * Metodo que processa em um laco todas as linhas do arquivo de entrada para desmontagem.
  */

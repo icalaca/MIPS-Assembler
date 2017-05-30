@@ -20,5 +20,7 @@ private:
     static std::string jType(std::string bin);
     static std::string rType(std::string bin);
     static std::string procObj(std::string hex, int line);
+    static bool labelExists(int line);
+    static std::string getLabel(int line);
 };
 #endif //TRABALHO_OAC_DISASSEMBLER_H

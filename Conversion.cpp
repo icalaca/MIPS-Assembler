@@ -4,6 +4,7 @@
 
 #include "Conversion.h"
 #include "math.h"
+#include <iostream>
 
 using namespace std;
 
@@ -19,10 +20,11 @@ string extend(string s,char c,int ext){
 /*
  * Este metodo converte um numero binario para um numero em decimal.
  */
-int Conversion::binToDec(string bin) {
+int Conversion::binToDec(string inp_bin) {
     bool baux = false;
     int result = 0;
-    if(bin[0] == 1){ // se entrar nesta condicional, sera desfeito o complemento de dois.
+    string bin = inp_bin;
+    if(bin[0] == '1'){ // se entrar nesta condicional, sera desfeito o complemento de dois.
         for(int i = bin.size()-1;i >= 0;i--){
             if(baux == true)
                 bin[i] = ((bin[i] == '0') ? '1' : '0');
